@@ -34,13 +34,30 @@ def run_experiment(name, A, b, epsilon=None, x_true=None):
 
     # Calculate numerical metrics.
     numerical_metrics = [
-    calculate_metrics(A, b, x) if x is not None else None
+    calculate_metrics(A, b, x, x_true) if x is not None else None
     for d in x_list 
     for x in d.values()
     ]
-
     # Return the result records.
-    rows = [{"name":name, "rank":rank, "cond_A":cond_A, "cond_ATA":cond_ATA, "x_list":x_list, "numerical_metrics":numerical_metrics}]
+    # rows = [{"name":name, "rank":rank, "cond_A":cond_A, "cond_ATA":cond_ATA, "x_list":x_list, "numerical_metrics":numerical_metrics}]
+    i = 0
+    for method in METHODS:
+        # Obtain this method's result.
+        row = {
+            "experiment": name,
+            "epsilon": epsilon,
+            "method": method,
+            "numerical_rank": rank,
+            "cond_A": cond_A,
+            "cond_ATA": cond_ATA,
+            "residual_norm": numerical_metrics[i][0] if numerical_metrics[i] is not None else None,
+            "orthogonality_norm": numerical_metrics[i][1] if numerical_metrics[i] is not None else None,
+            "forward_error": numerical_metrics[i][2] if numerical_metrics[i] is not None else None,
+            "status": "success" if numerical_metrics[i] is not None else "unsupported"
+        }
+        i += 1
+        rows.append(row)
+
     return rows 
     
 
@@ -65,9 +82,9 @@ def main():
             [1.0, 1.0 + eps]
         ])
 
-        x_true = np.array([1.0, 0.0])
+        x_true = np.array([1.0, 1.0])
         b = A @ x_true
-        result3.append(run_experiment("experiment 3", A, b, x_true=x_true))
+        result3.append(run_experiment("experiment 3", A, b, epsilon = eps, x_true=x_true))
 
     # Aggregate records.
     rows = result1 + result2 + [row for experiment in result3 for row in experiment]
